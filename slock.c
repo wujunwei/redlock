@@ -1,7 +1,7 @@
 //
 // Created by dell on 2018-11-28.
 //
-#include "../redismodule.h"
+#include "../src/redismodule.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -9,15 +9,15 @@
 #include <stdint.h>
 #include <sys/time.h>
 
-#ifndef LOCK_SUCCESS
-#define LOCK_SUCCESS 1
-#endif
+//#ifndef SUCCESS
+//#define SUCCESS 1
+//#endif
+//
+//#ifndef FAIL
+//#define FAIL 0
+//#endif
 
-#ifndef LOCK_FAIL
-#define LOCK_FAIL 1
-#endif
-
-static RedisModuleType *SLock;
+static RedisModuleType *SLockType;
 
 struct SLock {
     mstime_t lock_time;
@@ -25,7 +25,8 @@ struct SLock {
 };
 /**
  *  slock.lock lock_key expire
- *  the comand lock will return result immediately , you shall cal lock in a while or give up locking
+ *  the comand lock will return result immediately ,
+ *  you shall cal lock in a while or give up locking
  * @param ctx
  * @param argv
  * @param argc
@@ -42,20 +43,56 @@ int SlockLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
     if(keyType == REDISMODULE_KEYTYPE_EMPTY){
         struct SLock *lock = RedisModule_Alloc(sizeof(*lock));
         lock->client_id = RedisModule_GetClientId(ctx);
-
         //get system microsecond
         struct timeval tv;
         gettimeofday(&tv, NULL);
         long long ust = ((long long)tv.tv_sec)*1000000;
         ust += tv.tv_usec;
         lock->lock_time = ust/1000;
-        RedisModule_ModuleTypeSetValue(key, SLock, lock);
-        RedisModule_ReplyWithLongLong(ctx,LOCK_SUCCESS);
+
+        RedisModule_ModuleTypeSetValue(key, SLockType, lock);
+        if(argc == 3){
+            long long more_time;
+            if (RedisModule_StringToLongLong(argv[2], &more_time) != REDISMODULE_OK){
+                return RedisModule_ReplyWithError(ctx,"ERR invalid expireTime");
+            }
+            RedisModule_SetExpire(key, lock->lock_time + more_time);
+        }
+        RedisModule_ReplyWithLongLong(ctx,1);
     } else{
-        if(RedisModule_ModuleTypeGetType(key) != SLock){
+        if(RedisModule_ModuleTypeGetType(key) != SLockType){
             return RedisModule_ReplyWithError(ctx,REDISMODULE_ERRORMSG_WRONGTYPE);
         }
-        RedisModule_ReplyWithLongLong(ctx,LOCK_FAIL);
+        RedisModule_ReplyWithLongLong(ctx,0);
+    }
+    return REDISMODULE_OK;
+}
+
+/**
+ * Slock.unlock key
+ * @param ctx
+ * @param argv
+ * @param argc
+ * @return
+ */
+int SlockunLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int argc)
+{
+    if (argc != 2){
+        return RedisModule_WrongArity(ctx);
+    }
+
+    RedisModuleKey *key = RedisModule_OpenKey(ctx, argv[1], REDISMODULE_WRITE|REDISMODULE_READ);
+    if (RedisModule_ModuleTypeGetType(key) != SLockType){
+        return RedisModule_ReplyWithError(ctx,REDISMODULE_ERRORMSG_WRONGTYPE);
+    } else{
+        struct SLock *lock;
+        lock = RedisModule_ModuleTypeGetValue(key);
+        if(lock->client_id == RedisModule_GetClientId(ctx)){
+            RedisModule_DeleteKey(key);
+            RedisModule_ReplyWithLongLong(ctx, 1);
+        }else{
+            RedisModule_ReplyWithLongLong(ctx, 0);
+        }
     }
     return REDISMODULE_OK;
 }
@@ -110,7 +147,6 @@ int RedisModule_OnLoad(RedisModuleCtx *ctx, RedisModuleString **argv, int argc) 
 
     if (RedisModule_Init(ctx,"slock",1,REDISMODULE_APIVER_1)
         == REDISMODULE_ERR) return REDISMODULE_ERR;
-
     RedisModuleTypeMethods tm = {
             .version = REDISMODULE_TYPE_METHOD_VERSION,
             .rdb_load = SLockRdbLoad,
@@ -121,20 +157,17 @@ int RedisModule_OnLoad(RedisModuleCtx *ctx, RedisModuleString **argv, int argc) 
             .digest = SLockDigest
     };
 
-    SLock = RedisModule_CreateDataType(ctx,"slock",0,&tm);
-    if (SLock == NULL) return REDISMODULE_ERR;
+    SLockType = RedisModule_CreateDataType(ctx,"slocktype",0,&tm);
+    if (SLockType == NULL) return REDISMODULE_ERR;
 
     if (RedisModule_CreateCommand(ctx,"slock.lock",
                                   SlockLock_RedisCommand,"write deny-oom",1,1,1) == REDISMODULE_ERR)
         return REDISMODULE_ERR;
 
-    if (RedisModule_CreateCommand(ctx,"hellotype.range",
-                                  HelloTypeRange_RedisCommand,"readonly",1,1,1) == REDISMODULE_ERR)
+    if (RedisModule_CreateCommand(ctx,"slock.unlock",
+                                  SlockunLock_RedisCommand,"write",1,1,1) == REDISMODULE_ERR)
         return REDISMODULE_ERR;
 
-    if (RedisModule_CreateCommand(ctx,"hellotype.len",
-                                  HelloTypeLen_RedisCommand,"readonly",1,1,1) == REDISMODULE_ERR)
-        return REDISMODULE_ERR;
 
     return REDISMODULE_OK;
 }
