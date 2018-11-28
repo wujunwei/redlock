@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #ifndef LOCK_SUCCESS
 #define LOCK_SUCCESS 1
@@ -23,7 +24,7 @@ struct SLock {
     unsigned long long client_id;
 };
 /**
- *  slock.lock key
+ *  slock.lock lock_key expire
  *  the comand lock will return result immediately , you shall cal lock in a while or give up locking
  * @param ctx
  * @param argv
@@ -33,14 +34,27 @@ struct SLock {
 int SlockLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int argc) {
     RedisModule_AutoMemory(ctx);
 
-    if (argc != 1){
+    if (argc < 2){
         return RedisModule_WrongArity(ctx);
     }
     RedisModuleKey *key = RedisModule_OpenKey(ctx, argv[2], REDISMODULE_READ|REDISMODULE_WRITE);
     int keyType = RedisModule_KeyType(key);
-    if(keyType != REDISMODULE_KEYTYPE_EMPTY && RedisModule_ModuleTypeGetType(key) == SLock){
+    if(keyType == REDISMODULE_KEYTYPE_EMPTY){
+        struct SLock *lock = RedisModule_Alloc(sizeof(*lock));
+        lock->client_id = RedisModule_GetClientId(ctx);
+
+        //get system microsecond
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        long long ust = ((long long)tv.tv_sec)*1000000;
+        ust += tv.tv_usec;
+        lock->lock_time = ust/1000;
+        RedisModule_ModuleTypeSetValue(key, SLock, lock);
         RedisModule_ReplyWithLongLong(ctx,LOCK_SUCCESS);
     } else{
+        if(RedisModule_ModuleTypeGetType(key) != SLock){
+            return RedisModule_ReplyWithError(ctx,REDISMODULE_ERRORMSG_WRONGTYPE);
+        }
         RedisModule_ReplyWithLongLong(ctx,LOCK_FAIL);
     }
     return REDISMODULE_OK;
