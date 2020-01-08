@@ -1,7 +1,5 @@
-//
-// Created by dell on 2018-11-28.
-//
-#include "../src/redismodule.h"
+
+#include "../redismodule.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -21,7 +19,7 @@ struct SLock {
 /**
  *  slock.lock lock_key expire
  *  the comand lock will return result immediately ,
- *  you shall cal lock in a while or give up locking
+ *  you shall call lock in a while or give up locking
  * @param ctx
  * @param argv
  * @param argc
