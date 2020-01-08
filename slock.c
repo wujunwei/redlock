@@ -1,6 +1,6 @@
 
 //
-// Created by dell on 2018-11-28.
+// Created by adam on 2018-11-28.
 //
 #include "../src/redismodule.h"
 #include <ctype.h>
@@ -67,11 +67,15 @@ int SlockLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
  */
 int SlockInfo_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int argc)
 {
+    RedisModule_AutoMemory(ctx);
     if (argc != 2){
         return RedisModule_WrongArity(ctx);
     }
 
     RedisModuleKey *key = RedisModule_OpenKey(ctx, argv[1], REDISMODULE_READ);
+    if (RedisModule_KeyType(key) == REDISMODULE_KEYTYPE_EMPTY){
+        return RedisModule_ReplyWithNull(ctx);
+    }
     if (RedisModule_ModuleTypeGetType(key) != SLockType){ //判断键类型
         return RedisModule_ReplyWithError(ctx,REDISMODULE_ERRORMSG_WRONGTYPE);
     } else{
@@ -79,7 +83,6 @@ int SlockInfo_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
         RedisModule_ReplyWithArray(ctx, 2);
         RedisModule_ReplyWithLongLong(ctx, lock->client_id);
         RedisModule_ReplyWithLongLong(ctx, lock->lock_time);
-        RedisModule_Free(lock);
     }
     RedisModule_CloseKey(key);
     return REDISMODULE_OK;
@@ -94,11 +97,15 @@ int SlockInfo_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
  */
 int SlockunLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int argc)
 {
+    RedisModule_AutoMemory(ctx);
     if (argc != 2){
         return RedisModule_WrongArity(ctx);
     }
 
     RedisModuleKey *key = RedisModule_OpenKey(ctx, argv[1], REDISMODULE_WRITE|REDISMODULE_READ);
+    if (RedisModule_KeyType(key) == REDISMODULE_KEYTYPE_EMPTY){
+        return RedisModule_ReplyWithNull(ctx);
+    }
     if (RedisModule_ModuleTypeGetType(key) != SLockType){
         return RedisModule_ReplyWithError(ctx,REDISMODULE_ERRORMSG_WRONGTYPE);
     } else{
