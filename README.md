@@ -1,8 +1,8 @@
-[![jk](https://img.shields.io/github/stars/wujunwei/redlock)](https://github.com/wujunwei/redlock)
-[![jk](https://img.shields.io/github/watchers/wujunwei/redlock)](https://github.com/wujunwei/redlock)
-[![jk](https://img.shields.io/github/folks/wujunwei/redlock)](https://github.com/wujunwei/redlock)
+[![jk](https://img.shields.io/github/stars/wujunwei/redlock?color=blue)](https://github.com/wujunwei/redlock)
+[![jk](https://img.shields.io/github/watchers/wujunwei/redlock?color=green)](https://github.com/wujunwei/redlock)
+[![jk](https://img.shields.io/github/forks/wujunwei/redlock?color=red)](https://github.com/wujunwei/redlock)
 [![GitHub version](https://img.shields.io/github/release/picotera/redlock.svg?style=flat-square)](https://github.com/wujunwei/redlock/releases/latest)
-[![jk](https://img.shields.io/badge/held_toghether_by-adam-C70039.svg?style=flat-square)]()
+[![jk](https://img.shields.io/badge/support_by-adam-C70039.svg?style=flat-square)]()
 
 # redlock
 a way to achieve  distributed lock by redis module
