@@ -1,5 +1,7 @@
+[![jk](https://img.shields.io/github/stars/wujunwei/redlock)](https://github.com/wujunwei/redlock)
+[![jk](https://img.shields.io/github/watchers/wujunwei/redlock)](https://github.com/wujunwei/redlock)
+[![jk](https://img.shields.io/github/folks/wujunwei/redlock)](https://github.com/wujunwei/redlock)
 [![GitHub version](https://img.shields.io/github/release/picotera/redlock.svg?style=flat-square)](https://github.com/wujunwei/redlock/releases/latest)
-	[![jk](https://img.shields.io/github/stars/wujunwei/redlock)](https://github.com/wujunwei/redlock)
 [![jk](https://img.shields.io/badge/held_toghether_by-adam-C70039.svg?style=flat-square)]()
 
 # redlock
