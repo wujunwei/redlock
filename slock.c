@@ -81,7 +81,7 @@ int SlockInfo_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
  * @param argc
  * @return int
  */
-int SlockunLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int argc) {
+int SlockUnLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int argc) {
     RedisModule_AutoMemory(ctx);
     if (argc != 2) {
         return RedisModule_WrongArity(ctx);
@@ -171,13 +171,15 @@ int RedisModule_OnLoad(RedisModuleCtx *ctx, RedisModuleString **argv, int argc) 
     SLockType = RedisModule_CreateDataType(ctx, "slocktype", 0, &tm);
     if (SLockType == NULL) return REDISMODULE_ERR;
 
-    if (RedisModule_CreateCommand(ctx, COMMAND_SLOCK_UNLOCK, SlockunLock_RedisCommand, "write", 1, 1, 1) == REDISMODULE_ERR)
+    if (RedisModule_CreateCommand(ctx, COMMAND_SLOCK_UNLOCK, SlockUnLock_RedisCommand, "write", 1, 1, 1) ==
+        REDISMODULE_ERR)
         return REDISMODULE_ERR;
 
     if (RedisModule_CreateCommand(ctx, COMMAND_SLOCK_LOCK, SlockLock_RedisCommand, "write", 1, 1, 1) == REDISMODULE_ERR)
         return REDISMODULE_ERR;
 
-    if (RedisModule_CreateCommand(ctx, COMMAND_SLOCK_INFO, SlockInfo_RedisCommand, "readonly", 1, 1, 1) == REDISMODULE_ERR)
+    if (RedisModule_CreateCommand(ctx, COMMAND_SLOCK_INFO, SlockInfo_RedisCommand, "readonly", 1, 1, 1) ==
+        REDISMODULE_ERR)
         return REDISMODULE_ERR;
 
     return REDISMODULE_OK;

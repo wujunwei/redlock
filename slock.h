@@ -2,14 +2,15 @@
 #define SLOCK_H
 
 #include "../src/redismodule.h"
-#include <ctype.h>
 #include <string.h>
 
 static RedisModuleType *SLockType;
 
 typedef struct slock {
     mstime_t lock_time;
-    unsigned long long client_id;
+    ushort is_write;
+    //todo read_client_list
+    unsigned long long write_client_id;
 } SLock;
 
 
@@ -20,10 +21,14 @@ typedef struct slock {
 #define COMMAND_SLOCK_UNLOCK "slock.unlock"
 #define COMMAND_SLOCK_LOCK "slock.lock"
 #define COMMAND_SLOCK_INFO "slock.info"
-
+#define COMMAND_SLOCK_Rlock "slock.rlock"
+#define COMMAND_SLOCK_Runlock "slock.runlock"
 
 //MODULE INFO
 #define  MODULE_NAME "slock"
-#define MODULE_VERSION 1
+#define MODULE_VERSION 2
 
+#define BOOL int
+#define TRUE 1
+#define FALSE 0
 #endif
