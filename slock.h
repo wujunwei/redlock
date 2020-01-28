@@ -6,9 +6,13 @@
 
 static RedisModuleType *SLockType;
 
+#define BOOL int
+#define TRUE 1
+#define FALSE 0
+
 typedef struct slock {
     mstime_t lock_time;
-    ushort is_write;
+    BOOL is_write;
     //todo read_client_list
     unsigned long long write_client_id;
 } SLock;
@@ -28,7 +32,4 @@ typedef struct slock {
 #define  MODULE_NAME "slock"
 #define MODULE_VERSION 2
 
-#define BOOL int
-#define TRUE 1
-#define FALSE 0
 #endif

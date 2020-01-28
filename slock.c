@@ -21,7 +21,7 @@ int SlockLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
     int keyType = RedisModule_KeyType(key);
     if (keyType == REDISMODULE_KEYTYPE_EMPTY) {
         SLock *lock = RedisModule_Alloc(sizeof(*lock));
-        lock->client_id = RedisModule_GetClientId(ctx);
+        lock->write_client_id = RedisModule_GetClientId(ctx);
         lock->lock_time = RedisModule_Milliseconds();
 
         RedisModule_ModuleTypeSetValue(key, SLockType, lock);
@@ -67,7 +67,7 @@ int SlockInfo_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
     } else {
         SLock *lock = RedisModule_ModuleTypeGetValue(key);
         RedisModule_ReplyWithArray(ctx, 2);
-        RedisModule_ReplyWithLongLong(ctx, lock->client_id);
+        RedisModule_ReplyWithLongLong(ctx, lock->write_client_id);
         RedisModule_ReplyWithLongLong(ctx, lock->lock_time);
     }
     RedisModule_CloseKey(key);
@@ -96,7 +96,7 @@ int SlockUnLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int 
     } else {
         SLock *lock;
         lock = RedisModule_ModuleTypeGetValue(key);
-        if (lock->client_id == RedisModule_GetClientId(ctx)) {
+        if (lock->write_client_id == RedisModule_GetClientId(ctx)) {
             RedisModule_DeleteKey(key);
             RedisModule_ReplyWithLongLong(ctx, 1);
         } else {
@@ -115,20 +115,20 @@ void *SLockRdbLoad(RedisModuleIO *rdb, int encver) {
         return NULL;
     }
     SLock *sl = RedisModule_Alloc(sizeof(sl));
-    sl->client_id = RedisModule_LoadUnsigned(rdb);
+    sl->write_client_id = RedisModule_LoadUnsigned(rdb);
     sl->lock_time = RedisModule_LoadSigned(rdb);
     return sl;
 }
 
 void SLockRdbSave(RedisModuleIO *rdb, void *value) {
     SLock *sl = value;
-    RedisModule_SaveUnsigned(rdb, sl->client_id);
+    RedisModule_SaveUnsigned(rdb, sl->write_client_id);
     RedisModule_SaveSigned(rdb, sl->lock_time);
 }
 
 void SLockAofRewrite(RedisModuleIO *aof, RedisModuleString *key, void *value) {
     SLock *sl = value;
-    RedisModule_EmitAOF(aof, "SLOCK.LOCK", "sll", key, sl->lock_time, sl->client_id);
+    RedisModule_EmitAOF(aof, "SLOCK.LOCK", "sll", key, sl->lock_time, sl->write_client_id);
 }
 
 /* The goal of this function is to return the amount of memory used by
@@ -144,7 +144,7 @@ void SLockFree(void *value) {
 
 void SLockDigest(RedisModuleDigest *md, void *value) {
     SLock *sl = value;
-    RedisModule_DigestAddLongLong(md, sl->client_id);
+    RedisModule_DigestAddLongLong(md, sl->write_client_id);
     RedisModule_DigestAddLongLong(md, sl->lock_time);
     RedisModule_DigestEndSequence(md);
 }
