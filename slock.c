@@ -146,7 +146,7 @@ int SlockRUnLock_RedisCommand(RedisModuleCtx *ctx, RedisModuleString **argv, int
     }
     SLock *lock;
     lock = RedisModule_ModuleTypeGetValue(key);
-    if (lock->is_write) {
+    if (!lock->is_write) {
         if (--lock->reader_count <= 0) {
             RedisModule_DeleteKey(key);
         }
