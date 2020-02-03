@@ -29,6 +29,6 @@ typedef struct slock {
 
 //MODULE INFO
 #define  MODULE_NAME "slock"
-#define MODULE_VERSION 2
+#define MODULE_VERSION 1
 
 #endif
