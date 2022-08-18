@@ -7,16 +7,25 @@
 a way to achieve  distributed lock by redis module
 
 <img src="https://upload.wikimedia.org/wikipedia/en/6/6b/Redis_Logo.svg" alt="redis" height="30" />
-<h3>How to install</h3>
+
+
+### build
 
 ```
+git clone  --depth=1 git@github.com:redis/redis.git
+cd redis
 git clone https://github.com/wujunwei/redlock
 cd redlock
 make
+```
+
+### install
+
+```
 //and load the module in redis cli or add it into the conf
 module load redlock.so
 ```
-<h3>How to use</h3>
+### How to use
 
 * **slock.lock lock_key （expire_time）**
 <br />The command will return result immediately ,you shall call lock in a while or give up locking
