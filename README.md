@@ -22,7 +22,7 @@ make
 ### install
 
 ```
-//and load the module in redis cli or add it into the conf
+//run it in redis cli or add it into the conf
 module load redlock.so
 ```
 ### How to use
